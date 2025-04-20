@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scroller</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #ffffff;
+      color: #0f1419;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 250px 600px 300px;
+      padding: 0 20px 0;
+      max-width: 1200px;
+      width: 100%;
+    }
+    .sidebar {
+      background-color: #ffffff;
+      padding: 8px 0;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      font-weight: 700;
+      padding: 0 16px;
+      margin: 16px 0 8px;
+    }
+    .logo {
+      padding: 0 16px;
+      margin: 16px 0 8px;
+      width: 150px;
+    }    
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar ul li {
+      padding: 12px 16px;
+      font-size: 15px;
+      color: #0f1419;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .sidebar ul li:hover {
+      background-color: #f7f9f9;
+    }
+    .leftbar {
+      border-right: 1px solid #e6ecf0;
+    }
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border-right: 1px solid #e6ecf0;
+    }
+    .tweet {
+      background-color: #ffffff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e6ecf0;
+      position: relative;
+    }
+    .tweet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: #cfd9de;
+      margin-right: 10px;
+    }
+    .avatar img {
+      border-radius: 50%;
+    }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .tweet-user {
+      display: flex;
+      gap: 6px;
+      font-size: 15px;
+      flex-direction: column;
+      align-items: left;
+    }
+    .tweet-user .display-name {
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .tweet-user .username {
+      color: #536471;
+      font-weight: 400;
+    }
+    .tweet-user .meta-line {
+      display: flex;
+      gap: 6px;
+      color: #536471;
+      font-weight: 400;
+    }    
+    .tweet-content {
+      margin-top: 10px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+    .tweet-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #536471;
+    }
+    .reveal-button {
+      background: none;
+      border: none;
+      color: #536471;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    .hidden-div {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+      margin-top: 10px;
+      padding: 0 10px;
+      background-color: #f7f9f9;
+      border-radius: 12px;
+      color: #0f1419;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .hidden-div.open {
+      max-height: 1000px;
+      padding: 10px;
+    } 
+    .media {
+      margin-top: 10px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .media img, .media video {
+      width: 100%;
+      border-radius: 12px;
+    }
+    .repost {
+      background-color: #f7f9f9;
+      padding: 10px;
+      border-radius: 12px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .footnote {
+      border-top: 1px solid #000;
+    }
+    .note {
+      text-indent:1em;
+      font-size: .8em;
+    }
+    sup {
+      font-size: x-small;
+    }
+    #bibliography {
+      padding: 0 20px 20px;
+    }
+    #bibliography p {
+      text-indent: 2em hanging;
+    }
+  </style>
+</head>
+<body id="home">
+  <div class="container">
+    <div class="sidebar leftbar">
+      <img src="logo.png" alt="Scroller Logo" class="logo" />
+      <h2>Navigation</h2>
+      <ul>
+        <li id="scroll-to-home">Home</li>
+        <li>Explore</li>
+        <li>Notifications</li>
+        <li>Messages</li>
+        <li>Bookmarks</li>
+        <li>Lists</li>
+        <li>Profile</li>
+        <li id="scroll-to-bibliography">Bibliography</li>
+        <li id="toggle-all">Toggle Open</li>
+      </ul>
+    </div>
+
+    <div class="feed">
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 10:33am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          I made it to Pompeii!! ...and, uh, well... the place isn’t as nice as the brochures made it out to be but I’m sure I’ll still have a good time!
+        </div>
+        <div class="media">
+          <img src="walking-distance.jpg" alt="Streets of Pompeii" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 3</span>
+          <span>🔁 0</span>
+          <span>❤️ 11</span>
+          <span>📊 42</span>
+        </div>
+        <div class="hidden-div">
+          <p>While the eruption of Mt. Vesuvius in 79 CE is Pompeii’s most infamous natural disaster, there was another disaster the city was known for before the volcano popped its top: the earthquake of 62 CE. Seneca the Younger wrote about the event in his book <em>Natural Questions</em>, describing an earthquake that destroyed Pompeii and left Herculaneum barely standing.<sup></sup></p>
+
+          <p>As the modern archaeological work has progressed in Pompeii, there is ample evidence that bears truth to the event, with many of its structures featuring damage caused by seismic activity and many restoration work-related artifacts found throughout the city.<sup></sup></p>
+
+          <div class="footnote"> 
+            <p class="note">Seneca the Younger, <em>Natural Questions</em>, trans. Harry M. Hine (University of Chicago Press, 2010).</p>
+            <p class="note">Mary Beard, <em>The Fires of Vesuvius: Pompeii Lost and Found</em> (Harvard University Press, 2008), 13.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 11:15am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Alright, just got checked in, scored a sweet place right by the entrance with everything I could want within walking distance.
+        </div>
+        <div class="tweet-actions">
+          <span>💬 0</span>
+          <span>🔁 0</span>
+          <span>❤️ 2</span>
+          <span>📊 27</span>
+        </div>
+        <div class="hidden-div">
+          <p>Pompeii was a city totally surrounded by walls that predated the eruption of Mt. Vesuvius by almost 700 years.<sup></sup> Within the walls were various gates leading in and out of the city, with the northern Herculaneum Gate and the southern Stabian Gate as the likely main points of ingress and egress due to the fact that those gates had the most amount of bars and inns in their proximity, suggesting they had the most amount of traveler foot traffic.<sup></sup></p>
+
+          <div class="footnote"> 
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 32.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 60.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 11:31am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Dear Jupiter, how do these Pompeiians ever hear themselves think?? I’ve only been here an hour and my head is throbbing from all the noise...
+        </div>
+        <div class="media">
+          <img src="arrival.jpg" alt="Entrance of Pompeii" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 1</span>
+          <span>🔁 0</span>
+          <span>❤️ 5</span>
+          <span>📊 33</span>
+        </div>
+        <div class="hidden-div">
+          <p>Walking amongst a Roman street was an assault on the senses. Ancient poet Martial detailed the cacophony of sound one might experience walking through a Roman street:</p>
+
+          <p>“Schoolmasters deny you life in the morning, bakers at night, the hammers of the coppersmiths all day. On one hand the idle moneychanger rattles his grubby counter with Nero's metal, on the other the pounder of Spanish gold dust beats his well-worn stone with shining mallet; neither does Bellona's frenzied throng give up, nor the garruIous castaway with his swaddled trunk, nor the Jew that his mother taught to beg, nor the blear-eyed pedlar of sulphurated wares.”<sup></sup></p>
+
+          <div class="footnote"> 
+            <p class="note">Martial, <em>Epigrams</em>, vol. 3, trans. by D.R. Shackleton Bailey (Harvard University Press, 1993), 137.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 12:03pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Tried to get into the Temple of Apollo to offer my thanks for getting me to Pompeii safely but this sacrifice taking place outside is making it hard to get in.
+        </div>
+        <div class="media">
+          <img src="sacrifice.png" alt="Animal sacrifice outside of a temple" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 0</span>
+          <span>🔁 0</span>
+          <span>❤️ 2</span>
+          <span>📊 24</span>
+        </div>
+        <div class="hidden-div">
+          <p>Throughout the city of Pompeii were many temples dedicated to Rome’s many gods and goddesses. The primary purpose of a temple was to house a statue of these gods whereby people could visit to lay down offerings.<sup></sup> These temples were typically quite cluttered with goods and valuables so it was likely they were well-guarded to prevent any kind of looting. In the Temple of Apollo in Pompeii, there was even looted booty from 2nd century BCE Corinth found during excavations.<sup></sup></p>
+
+          <p>One thing you wouldn’t find in a temple, however, was the conduct of any animal sacrifices. Those would take place outside the temple, where an animal like a bull would be killed at an altar while priests or government officials recited a prayer.<sup></sup> Afterwards, some of the meat would be divided for distribution while another section would be burnt as the sacrifice to the god.<sup></sup></p>
+
+          <div class="footnote"> 
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 285.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 286.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 291.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 292.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 1:11pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Just chatted up some umbratici outside my inn who let me know the best spots to grab a loaf of bread and a bite to eat. I saw them there when I checked in... two hours ago. 😳
+        </div>
+        <div class="tweet-actions">
+          <span>💬 4</span>
+          <span>🔁 0</span>
+          <span>❤️ 1</span>
+          <span>📊 38</span>
+        </div>
+        <div class="hidden-div">
+          <p>Ubiquitous throughout Pompeii’s streets were public benches. Placed around areas of congregation, such as bars and eateries, the majority of benches were never more than roughly 30 feet away from another bench, and a significant amount of the benches were placed on the southern side of the street in the shade from the hot Roman sun, offering a cool spot to rest and socialize with others.<sup></sup> Snobbish ancient authors created a term for the loitering, lazy Romans sitting on shaded benches: <em>umbratici</em>, literally translated, “shady characters.”<sup></sup>
+
+          <p>Benches were also more frequently placed in areas of high traffic facing the busy streets, as opposed to more quiet and secluded areas such as back alleys, suggesting they were positioned with another favorite human pastime in mind: people-watching.<sup></sup></p>
+
+          <div class="footnote"> 
+            <p class="note">Jeremy Hartnett, <em>The Roman Street: Urban Life and Society in Pompeii, Herculaneum, and Rome (Cambridge University Press, 2017)</em>, 54.</p>
+            <p class="note">Ibid.</p>
+            <p class="note">Hartnett, “<em>The Roman Street</em>,” 54-55.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 2:03:pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Digging the vibes about this place. Good food, good service, good times!!
+        </div>
+        <div class="media">
+          <img src="pub.jpg" alt="Eatery in Pompeii" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 1</span>
+          <span>🔁 1</span>
+          <span>❤️ 5</span>
+          <span>📊 41</span>
+        </div>
+        <div class="hidden-div">
+          <p>When it came to eating and drinking, the average Pompeiian left their home and ate out, for the limited and dense living arrangements didn’t have space for a pantry or kitchen, and any kind of cooking could be a disastrous fire waiting to happen.<sup></sup></p>
+
+          <p>Archaeologists have so far uncovered over 140 food and drink sites and 30 plus bakeries, which meant there was roughly one spot to eat or drink for every 55-90 Pompeiians.<sup></sup> These were small establishments, averaging around 350 sq ft of floor space and precious little seating, so most eating and drinking would occur outside of the venue on one of the many benches that lined the streets.<sup></sup> Not only could you fill yourself with food and wine but many of these places were also sources of finding a prostitute or partaking in some gambling.<sup></sup></p>
+
+          <div class="footnote"> 
+            <p class="note">Hartnett, “<em>The Roman Street</em>,” 40.</p>
+            <p class="note">Hartnett, “<em>The Roman Street</em>,” 41.</p>
+            <p class="note">Hartnett, “<em>The Roman Street</em>,” 54.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 226.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 3:01pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Woooo-wee, look at the size of this baby, I just had to get one to go!
+        </div>
+        <div class="media">
+          <img src="bread.png" alt="Loaf of Roman bread" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 4</span>
+          <span>🔁 2</span>
+          <span>❤️ 14</span>
+          <span>📊 76</span>
+        </div>
+        <div class="hidden-div">
+          <p>Bread was the staple food of Pompeii with over thirty bakeries discovered thus far.<sup></sup> Some of these were on a commercial scale, such as the Bakery of the Chaste Lovers, where slaves or mules milled the flour in one of four mills, slaves prepared the dough and baked the bread in gigantic ovens, and loaves delivered by mule to customers or handed out at a bread stall elsewhere in the city.<sup></sup></p>
+
+          <p>The bread of Pompeii is made simply with flour, salt, sugar, and water. Carbonized loaves have been discovered in Pompeii and we can see that bakers cut the loaves into eight pieces, like a pizza, and would tie a rope around the circumference, likely to make it easily portable for the customers.<sup></sup> The British Museum has a video tutorial if you’d like to try to make your own!</p>
+
+          <iframe width="545" height="315" src="https://www.youtube.com/embed/DYTuNXq1eBk?si=YY-ldwtYlKyr-axF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+          <p><a href="https://www.youtube.com/watch?v=DYTuNXq1eBk">https://www.youtube.com/watch?v=DYTuNXq1eBk</a></p>
+
+          <div class="footnote"> 
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 170.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 171-73.</p>
+            <p class="note">The British Museum, “How to make 2,000-year-old-bread,” YouTube, June 14, 2013, https://www.youtube.com/watch?v=DYTuNXq1eBk.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 3:18pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Everywhere I turn I see an endorsement for this guy. Who the hell is he?? Even degenerate dice throwers appear to be behind him!
+        </div>
+        <div class="media">
+          <img src="election-graffiti.jpg" alt="" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 22</span>
+          <span>🔁 0</span>
+          <span>❤️ 4</span>
+          <span>📊 184</span>
+        </div>
+        <div class="hidden-div">
+          <p>Politics appears to have dominated the Pompeiian social scene. Every year, four magistrates were elected: two duumvir and two aedile, with the latter being more of a junior position to the former.<sup></sup> Together they would fill and oversee the town council, a body that would operate the civic management of Pompeii, such as the building of public spaces or managing the treasury. Being a councillor granted one certain privileges, such as the best seating at public events. However, the role of duumvir trumped them all, which is likely why archaeologists have unearthed over 2,500 campaign posters throughout the city of Pompeii, a town of roughly 12,000 people.<sup></sup></p>
+
+          <p>Most of these posters are rather plainly stated slogans: “I beg you to elect Publius Furius duumvir, a good man.”<sup></sup> Sometimes a little more, but not much, will be added, such as “He brings good bread,” or “great giver of games.” We even have examples of negative or satirical ads: “The little thieves ask for Vatia as aedile”<sup></sup> and “The dice-throwers ask for Cn. Helvius Sabinus.”<sup></sup></p>
+
+          <p>In the image posted in this scroll is a real ad for Gnaeus (Cn.) Helvium Sabinum and the D-R-P-O-V-F is an abbreviation for <em>Dignum Rei Publicae</em> (worthy of public office) <em>Oro Vos Faciatis</em> (I beg you to elect).<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Alison E. Cooley and M. G. L. Cooley, <em>Pompeii and Herculaneum: A Sourcebook</em> (Routledge, 2014), 160-61.</p>
+            <p class="note">Cooley and Cooley, “<em>Pompeii and Herculaneum</em>,” 161.</p>
+            <p class="note">Cooley and Cooley, “<em>Pompeii and Herculaneum</em>,” 164.</p>
+            <p class="note">Cooley and Cooley, “<em>Pompeii and Herculaneum</em>,” 165.</p>
+            <p class="note">Cooley and Cooley, “<em>Pompeii and Herculaneum</em>,” 176.</p>
+            <p class="note">Cooley and Cooley, “<em>Pompeii and Herculaneum</em>,” 170.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 4:15pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Ths service and ambiance at the baths of Pompeii is sublime, I'm in heaven!
+        </div>
+        <div class="media">
+          <img src="bath.jpg" alt="Interior of a Roman bath" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 18</span>
+          <span>🔁 3</span>
+          <span>❤️ 28</span>
+          <span>📊 111</span>
+        </div>
+        <div class="hidden-div">
+          <p>To bathe is to be Roman and like the rest of the empire, Pompeii featured a multitude of commercial and private baths, although most were in a state of disrepair ever since the great earthquake of 62 CE.<sup></sup> A bathing complex would be a place to socialize and relax while enjoying a steam, a scrub down, a massage, some sunbathing, and even games played with a ball.<sup></sup> They were the ultimate source of Roman R&R.</p>
+
+          <p>Baths are also considered a great social equalizer, as everyone visited the baths, from the rich to the poor, the elite and the enslaved, even emperors would visit public baths.<sup></sup></p>
+
+          <p>Despite the immense importance of bathing in Roman society, the bathwater itself was surprisingly a disgusting cesspool by modern standards. It was not chemically treated like our modern pools and the water was only infrequently changed, thus leaving behind all the dirt, grim, and bacteria of all the people who entered it.<sup></sup> Even Roman medical professionals would advise to not enter a bath with an open wound lest they wish to contract an infection and gangrene.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 243.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 241.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 242.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 247.</p>
+            <p class="note">Ibid.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 23, 79 5:37pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          What happens in Pompeii, stays in Pompeii. I'm gonna sleep good tonight if you know what I mean!
+        </div>
+        <div class="media">
+          <img src="brothel.png" alt="" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 8</span>
+          <span>🔁 22</span>
+          <span>❤️ 23</span>
+          <span>📊 111</span>
+        </div>
+        <div class="hidden-div">
+          <p>While prostitutes could be found all around the city, typically at the nearest watering hole with one of the barmaids, it appears likely there was only one single purpose-made <em>lupanar</em>, or brothel, in Pompeii.<sup></sup> It’s the only building in Pompeii that has multiple rooms featuring masonry beds, sexually graphic frescoes, and are covered in sex-related graffiti.<sup></sup> Additionally, it appears to have other rooms that were more for socializing over a drink, indicating that perhaps clients were looking for more than just a quick release but a more intimate experience with a friendly lady.<sup></sup></p>
+
+          <p>While prostitutes and pimps were seen to be of a lower class and had less rights than other Roman citizens, clients did not suffer socially for paying for sex.<sup></sup> In fact, even Cato the Elder, well known in history for his moral conservatism, is attributed to have once praised a young man for visiting a brothel, choosing to release his urges with a prostitute over sullying someone’s wife.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 237-38.</p>
+            <p class="note">Sarah Levin-Richardson, <em>The Brothel of Pompeii: Sex, Class, and Gender at the Margins of Roman Society</em> (Cambridge University Press, 2019), 4.</p>
+            <p class="note">Levin-Richardson, “<em>Brothel of Pompeii</em>,” 143-44.</p>
+            <p class="note">Levin-Richardson, “<em>Brothel of Pompeii</em>,” 2.</p>
+            <p class="note">Ibid.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 24, 79 8:58am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Starting Day 2 of Pompeii with a nice little delicacy: dormouse! Now to make my way to the games!
+        </div>
+        <div class="media">
+          <img src="dormouse.png" alt="Cooked dormouse" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 2</span>
+          <span>🔁 0</span>
+          <span>❤️ 6</span>
+          <span>📊 47</span>
+        </div>
+        <div class="hidden-div">
+          <p>Although your average Pompeiian lacked the space to grow cattle for food, there is evidence that some still managed to raise livestock for consumption. Found in Pompeii are <em>glirariums</em>, or dormouse jars, which were terracotta jars that housed mouse-like rodents for the intended purpose of fattening them up for consumption. The jars were poked with air holes and fitted with a lid to keep the dormouse in darkness, perhaps to induce them into sleeping and growing fat as opposed to muscle. Inside were layered ledges for running in circles and food trays that could be filled from openings on the outside. Multiple recipes have been discovered in Roman cookbooks, including stuffing the dormice with pork, pepper, nuts, fennel, and fish sauce or simply dipping them in honey and topping with sesame seeds.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 216-17.</p>
+          </div>
+        </div>
+      </div>      
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 24, 79 9:44am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          I made it to the amphitheater just in time for the gladiators! ARE YOU READY TO RUUMMMBBBBLLLE??? (srsly, tho, the ground has been sporadically shaking ever since i got to Pompeii)
+        </div>
+        <div class="media">
+          <img src="amphitheater.jpg" alt="Pompeii Amphitheater" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 3</span>
+          <span>🔁 0</span>
+          <span>❤️ 5</span>
+          <span>📊 55</span>
+        </div>
+        <div class="hidden-div">
+          <p>Perhaps Pompeii’s most important venue in the city was its amphitheater. An outdoor venue that seated 20,000 people, it played host to a variety of events, from man-on-man gladiatorial combat, man vs. beast “hunts,” athletic displays, and perhaps even pantomimes.<sup></sup> Special marbled front-row seating was reserved for the most elite of Pompeii’s citizens who had their own private entrance to prevent mingling with the public.<sup></sup></p>
+
+          <p>Much like modern-day boxers, gladiators were represented by a manager that booked their fights and provided their training.<sup></sup> Gladiators were primarily slaves and condemned criminals with a small amount being volunteers.<sup></sup> They appear to have lived communally in a type of gladiatorial barracks, two of which have been found in Pompeii full of a healthy supply of equipment such as weapons, helmets, and shinguards.</p>
+
+          <div class="footnote">
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 260, 265, 268.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 261.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 269-71.</p>
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 269-72.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 24, 79 10:05am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Aww man, they keep sparing the losers’ lives. I want to see some blood, damnit!!
+        </div>
+        <div class="tweet-actions">
+          <span>💬 0</span>
+          <span>🔁 0</span>
+          <span>❤️ 0</span>
+          <span>📊 11</span>
+        </div>
+        <div class="hidden-div">
+          <p>Combat wasn’t as deadly as popular opinion may believe; there is evidence of games taking place without a single gladiator being killed, with all defeated opponents granted a reprieve.<sup></sup> Still, analysis of stats that have been found in the graffiti record so far would suggest 1 in 6 gladiators would die each show.</p>
+
+          <div class="footnote">
+            <p class="note">Beard, “<em>Fires of Vesuvius</em>,” 274.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 24, 79 10:37am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          HOLY SHIT! VESUVIUS IS POPPING OFF!!!
+        </div>
+        <div class="media">
+          <img src="eruption.jpg" alt="Mt. Vesuvius begins eruption" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 2.3K</span>
+          <span>🔁 39K</span>
+          <span>❤️ 13K</span>
+          <span>📊 147K</span>
+        </div>
+        <div class="hidden-div">
+          <p>The only surviving eyewitness account of the eruption comes from Pliny the Younger, who watched the events unfold from his home on the other side of the Bay of Naples. In a personal letter he wrote around thirty years after the event, he describes first noticing the large cloud of ash emanating from Mt. Vesuvius early in the afternoon although it is likely it started much earlier.<sup></sup> This gigantic cloud of ash and pumice (light, porous rocks) had risen nine miles into the sky and would begin to deposit six inches of debris onto the city of Pompeii <em>every hour</em>.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Pliny the Younger, <em>The Letters of the Younger Pliny</em>, trans. by Betty Radice (Penguin Books, 1969), 166.</p>
+            <p class="note">Paul Roberts, <em>Life and Death in Pompeii and Herculaneum</em> (Oxford University Press, 2013), 282-83.</p>
+          </div>
+        </div>
+      </div>     
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="spqr.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Rome Emergency Management Agency 12:02pm</span>
+                <span class="meta-line">@REMA · Aug 24, 79</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          We have observed a disturbance in Mt. Vesuvius. We do not believe at this time that anyone is in danger, but in an abundance of caution, Admiral Pliny is on route with his fleet from Misenum to oversee and assist with events.
+        </div>
+        <div class="media">
+          <img src="fleet.jpg" alt="Fleet towards Pompeii" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 4.2K</span>
+          <span>🔁 11K</span>
+          <span>❤️ 5.9K</span>
+          <span>📊 89K</span>
+        </div>
+        <div class="hidden-div">
+          <p>Pliny the Younger wrote that his adoptive father, Pliny the Elder, would launch a rescue fleet to the shores close to Mt. Vesuvius and to check in on his dear friend Pomponianus.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Pliny, <em>Letters</em>, 167-68.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="pliny-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Pliny the Elder</span>
+                <span class="meta-line">@daddypliny · Aug 24, 79 2:57pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          People of Pompeii, I have arrived and there's nothing to fear. Stay strong and always remember: Fortune favors the bold. Now if you excuse me, time for a nightcap before bed.
+        </div>
+        <div class="tweet-actions">
+          <span>💬 897</span>
+          <span>🔁 3.4K</span>
+          <span>❤️ 2.1K</span>
+          <span>📊 40K</span>
+        </div>
+        <div class="hidden-div">
+          <p>For reasons unknown and despite being challenged to dock his boat in a harbor choked with a thick blanket of floating pumice, Pliny the Elder was not seriously concerned about the preceding events, telling his friend to not worry and insisted on dining, drinking, bathing, and even napping as hellfire rained down around him.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Ibid.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 24, 79 6:12pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          WTF, the house across the street just got DEMOLISHED by a volcano bomb!
+        </div>
+        <div class="media">
+          <video controls>
+            <source src="temple-bomb.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="tweet-actions">
+          <span>💬 45</span>
+          <span>🔁 67</span>
+          <span>❤️ 412</span>
+          <span>📊 4.9k</span>
+        </div>
+        <div class="hidden-div">
+          <p>By the late afternoon, the volcanic cloud was upwards of 16 miles into the sky and Mt. Vesuvius was now bombarding Pompeii with lithics, a much larger, denser type of rock 6-12 inches in diameter.<sup></sup> These screeching projectiles and the heaviness of nearly two feet of pumice began to strain and demolish the roofs of the structures of Pompeii, causing severe damage and death.</p>
+
+          <div class="footnote">
+            <p class="note">Roberts, “<em>Life and Death</em>,” 283.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 25, 79 5:54am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          I can’t believe I made it through the night but I have no clue how I’m gonna get out of here... there’s feet and feet of this stuff blocking everything.
+        </div>
+        <div class="media">
+          <img src="debris-field.png" alt="Debris after day 1" />
+        </div>
+        <div class="tweet-actions">
+          <span>💬 11</span>
+          <span>🔁 3</span>
+          <span>❤️ 29</span>
+          <span>📊 231</span>
+        </div>
+        <div class="hidden-div">
+          <p>By the early morning, the falling debris had begun to subside and those still alive may have started to believe the worst was over.<sup></sup> It was at this time, after a night of rest, that Pliny the Elder decided it was time to make an escape but, according to his son, wound up choking to death on the fumes of the fires that were burning throughout the city.<sup></sup> Unbeknownst to the rest of the people of Pompeii, overnight the neighboring cities of Herculaneum and Oplontis were obliterated by two pyroclastic surges when the weight of the volcanic cloud collapse upon itself and sent a tsunami of scorching hot gas and debris over 800°F traveling nearly 70 mph over their cities and its frightened masses.<sup></sup> For those caught in the surge, death was virtually instantaneous as the heat was “so intense that the skull split open under the pressure of the brain expanding and boiling inside.”<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Roberts, “<em>Life and Death</em>,” 295.</p>
+            <p class="note">Pliny, <em>Letters</em>, 168.</p>
+            <p class="note">Roberts, “<em>Life and Death</em>,” 285.</p>
+            <p class="note">Ibid.</p>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Vitus Viator</span>
+                <span class="meta-line">@garum_is_life · Aug 25, 79 6:40am</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          OMG... Tell my mom I love her and someone, please... delete my wax tablet history.
+        </div>
+        <div class="media">
+          <video controls>
+            <source src="pyro-surge.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="tweet-actions">
+          <span>💬 66</span>
+          <span>🔁 3K</span>
+          <span>❤️ 5K</span>
+          <span>📊 27K</span>
+        </div>
+        <div class="hidden-div">
+          <p>At roughly six in the morning, it was now Pompeii’s turn to bear the brunt of pyroclastic surges.<sup></sup> The first was actually repelled by Pompeii’s centuries-old city walls and granted them a reprieve of about an hour, but the next two would flow over the walls and begin to take the lives of the remaining survivors. While not as hot as the surges that took out the citizens of Herculaneum, they were just as deadly but probably more excruciatingly so as instead of instantly vaporizing, Pompeiians burned to death and asphyxiated on the noxious gases.<sup></sup> Since these surges were not as hot and thus did not carbonize human flesh, they allowed the remains to leave imprints in the volcanic ash that future archaeologists would be able to fill with plaster and make molds that give us the dramatic casts we see in museums throughout the world today.<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Roberts, “<em>Life and Death</em>,” 295.</p>
+            <p class="note">Roberts, “<em>Life and Death</em>,” 296.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Post -->
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="titus-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Imperator Titus Caesar Vespasianus Augustus</span>
+                <span class="meta-line">@Imperator · Aug 26, 79 2:00pm</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          I am dispatching my trusted consuls to survey the area and provide assistance to anyone who needs it. My heart is with the people of Campania.
+        </div>
+        <div class="tweet-actions">
+          <span>💬 34K</span>
+          <span>🔁 29K</span>
+          <span>❤️ 11K</span>
+          <span>📊 89K</span>
+        </div>
+        <div class="hidden-div">
+          <p>At the end of Mt. Vesuvius’ eruption, Pompeii laid beneath 13 to 19 feet of ash and pumice, the outlying farms and livestock were burned to a crisp, the coastline was extended by 1,300 feet from ejected material, and at a minimum 1,150 people perished.<sup></sup> The number is quite likely an undercount as it represents the total number of bodies discovered thus far in archaeological efforts that only encompasses a third of the total city.</p>
+
+          <p>Ancient historian Cassius Dio would write that Emperor Titus dispatched two ex-consuls to the region to survey relief and restoration efforts, which included giving monetary gifts and land to affected citizens.<sup></sup> It’s apparent that people, whether through organization or by looting, removed statues and marble, and one house was even marked with graffiti that read “house gone through.”<sup></sup></p>
+
+          <div class="footnote">
+            <p class="note">Roberts, “<em>Life and Death</em>,” 300-01.</p>
+            <p class="note">Roberts, “<em>Life and Death</em>,” 301.</p>
+            <p class="note">Ibid.</p>
+          </div>
+        </div>
+      </div>      
+
+      <!-- Text Post 
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Code Buddy</span>
+                <span class="meta-line">@fakename1 · Apr 18, 2025</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Working on a side project with some amazing people. Stay tuned! 🚀
+        </div>
+        <div class="tweet-actions">
+          <span>💬 8</span>
+          <span>🔁 21</span>
+          <span>❤️ 102</span>
+          <span>📊 950</span>
+        </div>
+        <div class="hidden-div">
+           <p>Godzilla is watching.<sup></sup></p>
+          <div class="footnote">
+              <p class="note" data-note="Mary the Younger, Natural Questions, trans. Harry M. Hine, (The University of Chicago Press, 2010)."></p>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Video Post 
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Video Blogger</span>
+                <span class="meta-line">@fakename1 · Apr 18, 2025</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Edited my latest vlog - thoughts?
+        </div>
+        <div class="media">
+          <video controls>
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="tweet-actions">
+          <span>💬 45</span>
+          <span>🔁 67</span>
+          <span>❤️ 412</span>
+          <span>📊 4.9k</span>
+        </div>
+        <div class="hidden-div">This is a behind-the-scenes clip from the vlog.</div>
+      </div> -->
+
+      <!-- Repost 
+      <div class="tweet">
+        <div class="tweet-header">
+          <div style="display: flex;">
+            <div class="avatar"><img src="viator-avatar.jpg" alt="Titus Avatar" /></div>
+            <div class="user-info">
+              <div class="tweet-user">
+                <span class="display-name">Tech Guru</span>
+                <span class="meta-line">@fakename1 · Apr 18, 2025</span>
+              </div>
+            </div>
+          </div>
+          <button class="reveal-button" onclick="toggleReveal(this)">⋯</button>
+        </div>
+        <div class="tweet-content">
+          Reposting this insightful thought:
+          <div class="repost">
+            <strong>@thinker</strong> — The best way to predict the future is to invent it.
+          </div>
+        </div>
+        <div class="tweet-actions">
+          <span>💬 14</span>
+          <span>🔁 38</span>
+          <span>❤️ 176</span>
+          <span>📊 2.3k</span>
+        </div>
+        <div class="hidden-div">Reposted from my favorite creator.</div>
+      </div> -->
+
+      <div id="bibliography">
+        <h2>Bibliography</h2>
+        <p>Beard, Mary. <em>The Fires of Vesuvius: Pompeii Lost and Found</em>. The Belknap Press of Harvard University Press, 2008.</p>
+        <p>The British Museum. “Pompeii Live from the British Museum.” YouTube, May 20, 2020. https://www.youtube.com/watch?v=0Cinu9yIbp0.</p>
+        <p>Cooley, Alison E., and M. G. L. Cooley. <em>Pompeii and Herculaneum: A Sourcebook</em>. Routledge, 2014.</p>
+        <p>Hartnett, Jeremy. <em>The Roman Street: Urban Life and Society in Pompeii, Herculaneum, and Rome</em>. Cambridge University Press, 2017.</p>
+        <p>Levin-Richardson, Sarah. <em>The Brothel of Pompeii: Sex, Class, and Gender at the Margins of Roman Society</em>. Cambridge University Press, 2019.</p>
+        <p>Martial. <em>Epigrams</em>. Translated by D.R. Shackleton Bailey. Vol. 3. Harvard University Press, 1993.</p>
+        <p>Pliny the Younger. <em>The Letters of the Younger Pliny</em>. Translated by Betty Radice. Penguin Books, 1969.</p>
+        <p>Roberts, Paul. <em>Life and Death in Pompeii and Herculaneum</em>. Oxford University Press, 2013.</p>
+        <p>Seneca the Younger. <em>Natural Questions</em>. Translated by Harry M. Hine. The University of Chicago Press, 2010.</p>
+      </div>
+    </div> 
+
+    <div class="sidebar">
+      <h2>Trending</h2>
+      <ul>
+        <li>#Earthquakes</li>
+        <li>#GamesDay</li>
+        <li>#FeastOfVinalia</li>
+        <li>#GaulProblem</li>
+        <li>#RIPVespasian</li>
+      </ul>
+
+      <h2>Who to follow</h2>
+      <ul>
+        <li>@ProfessorQuintilian</li>
+        <li>@MartialLaw</li>
+        <li>@UmbriciusGarum</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function toggleReveal(button) {
+      const tweet = button.closest('.tweet');
+      const hiddenDiv = tweet.querySelector('.hidden-div');
+      const isOpen = hiddenDiv.classList.contains('open');
+
+      if (isOpen) {
+        hiddenDiv.classList.remove('open');
+      } else {
+        hiddenDiv.classList.add('open');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const supers = document.querySelectorAll('sup');
+      const notes = document.querySelectorAll('.footnote .note');
+
+      for (let i = 0; i < Math.min(supers.length, notes.length); i++) {
+        const number = i + 1;
+        supers[i].textContent = number;
+        notes[i].innerHTML = `${number}. ` + notes[i].innerHTML;
+      }
+
+      document.getElementById('scroll-to-bibliography').addEventListener('click', () => {
+        const bibliography = document.getElementById('bibliography');
+        bibliography.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      document.getElementById('scroll-to-home').addEventListener('click', () => {
+        const bibliography = document.getElementById('home');
+        bibliography.scrollIntoView({ behavior: 'smooth' });
+      });      
+
+      const toggleAllItem = document.getElementById('toggle-all');
+      let toggleState = false;
+
+      toggleAllItem.addEventListener('click', () => {
+        const hiddenDivs = document.querySelectorAll('.hidden-div');
+        hiddenDivs.forEach(div => {
+          if (toggleState) {
+            div.classList.remove('open');
+          } else {
+            div.classList.add('open');
+          }
+        });
+        toggleState = !toggleState;
+        toggleAllItem.textContent = toggleState ? 'Toggle Close' : 'Toggle Open';
+      });
+        });
+  </script>
+
+</body>
+</html>
